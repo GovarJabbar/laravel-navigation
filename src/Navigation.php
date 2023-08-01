@@ -17,11 +17,16 @@ class Navigation implements Node
     /** @var Section[] */
     public array $children;
 
+    /** @var string[] */
+    public array $attributes;
+
     public function __construct(ActiveUrlChecker $activeUrlChecker)
     {
         $this->activeUrlChecker = $activeUrlChecker;
 
         $this->children = [];
+
+        $this->attributes = [];
     }
 
     public static function make(): static
@@ -29,7 +34,7 @@ class Navigation implements Node
         return app(static::class);
     }
 
-    public function add(string $title = '', string $url = '', ?callable $configure = null): self
+    public function add(string $title = '', string $url = '', ?callable $configure = null, ?array $attributes = null): self
     {
         $section = new Section($this, $title, $url);
 
@@ -37,15 +42,19 @@ class Navigation implements Node
             $configure($section);
         }
 
+        if ($attributes) {
+            $section->attributes($attributes);
+        }
+
         $this->children[] = $section;
 
         return $this;
     }
 
-    public function addIf($condition, string $title = '', string $url = '', ?callable $configure = null): self
+    public function addIf($condition, string $title = '', string $url = '', ?callable $configure = null, ?array $attributes = null): self
     {
         if ($this->resolveCondition($condition)) {
-            $this->add($title, $url, $configure);
+            $this->add($title, $url, $configure, $attributes);
         }
 
         return $this;
@@ -55,7 +64,7 @@ class Navigation implements Node
     {
         $activeSection = $this->activeSection();
 
-        if (! $activeSection) {
+        if (!$activeSection) {
             return false;
         }
 
